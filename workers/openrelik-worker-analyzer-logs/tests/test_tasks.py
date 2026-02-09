@@ -14,7 +14,9 @@
 
 import base64
 import filecmp
+from freezegun import freeze_time
 import json
+import os
 import time
 from threading import Thread
 from unittest.mock import patch
@@ -67,6 +69,22 @@ server_thread.start()
 time.sleep(0.1)
 
 
+def setUpModule():
+    """Executed once before any tests in this module run."""
+    os.environ["TZ"] = "UTC"
+    if hasattr(time, "tzset"):
+        time.tzset()
+
+
+def tearDownModule():
+    """Optional: Restores the environment after all tests are finished."""
+    if "TZ" in os.environ:
+        del os.environ["TZ"]
+    if hasattr(time, "tzset"):
+        time.tzset()
+
+
+@freeze_time("2025-01-01 00:00:00")
 class TestTasks:
     @patch("src.app.redis.Redis.from_url")
     def test_run_ssh_analyzer(self, mock_redisclient):
