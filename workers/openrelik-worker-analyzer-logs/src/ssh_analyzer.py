@@ -340,7 +340,7 @@ class LinuxSSHAnalysisTask:
             for key, value in self.MESSAGE_GRAMMAR.items():
                 if key.lower() == sshd_message_type.lower():
                     try:
-                        parsed_ssh_event = value.parseString(line)
+                        parsed_ssh_event = value.parse_string(line)
 
                         # handle date/time
                         dt_object = self.parse_message_datetime(
