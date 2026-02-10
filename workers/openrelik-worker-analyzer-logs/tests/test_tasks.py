@@ -14,7 +14,6 @@
 
 import base64
 import filecmp
-from freezegun import freeze_time
 import json
 import os
 import time
@@ -84,7 +83,6 @@ def tearDownModule():
         time.tzset()
 
 
-@freeze_time("2025-01-01 00:00:00")
 class TestTasks:
     @patch("src.app.redis.Redis.from_url")
     def test_run_ssh_analyzer(self, mock_redisclient):
@@ -94,7 +92,7 @@ class TestTasks:
             input_files=_INPUT_FILES,
             output_path="/tmp",
             workflow_id="deadbeef",
-            task_config={},
+            task_config={"log_year": "2025"},
         )
 
         output_dict = json.loads(base64.b64decode(output))
