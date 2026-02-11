@@ -22,7 +22,11 @@ from celery import signals
 from celery.utils.log import get_task_logger
 from openrelik_common import telemetry
 from openrelik_common.logging import Logger
-from openrelik_worker_common.file_utils import create_output_file, is_disk_image
+from openrelik_worker_common.file_utils import (
+    create_output_file,
+    is_disk_image,
+    OutputFile,
+)
 from openrelik_worker_common.mount_utils import BlockDevice
 from openrelik_worker_common.reporting import MarkdownTable, Priority, Report
 from openrelik_worker_common.task_utils import create_task_result, get_input_files
@@ -93,6 +97,7 @@ class YaraMatch:
     ref: str
     score: int
 
+
 def cleanup_fraken_output_log(logfile: OutputFile) -> None:
     """Cleanup fraken-x output to be one entry per line.
 
@@ -102,8 +107,9 @@ def cleanup_fraken_output_log(logfile: OutputFile) -> None:
     Returns:
         None
     """
+    extracted_dicts = []
     try:
-        with open(OutputFile.path, 'r') as f:
+        with open(OutputFile.path, "r") as f:
             for line in f:
                 line = line.strip()
                 try:
@@ -112,18 +118,20 @@ def cleanup_fraken_output_log(logfile: OutputFile) -> None:
                         for entry in data:
                             extracted_dicts.append(entry)
                 except json.JSONDecodeError:
-                    logger.warning(f"Incorrect fraken-x JSON line found: could not parse: {line}")
+                    logger.warning(
+                        f"Incorrect fraken-x JSON line found: could not parse: {line}"
+                    )
                     continue
     except FileNotFoundError:
         logger.warning("Could not find fraken-x outputfile.")
         return
-    
+
     if not extracted_dicts:
         return
 
-    with open(OutputFile.path, 'w') as f:
+    with open(OutputFile.path, "w") as f:
         for entry in extracted_dicts:
-            f.write(json.dumps(entry) + '\n')
+            f.write(json.dumps(entry) + "\n")
 
 
 def generate_report_from_matches(matches: list[YaraMatch]) -> Report:
