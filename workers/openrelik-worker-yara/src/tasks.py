@@ -109,7 +109,7 @@ def cleanup_fraken_output_log(logfile: OutputFile) -> None:
     """
     extracted_dicts = []
     try:
-        with open(OutputFile.path, "r") as f:
+        with open(logfile.path, "r") as f:
             for line in f:
                 line = line.strip()
                 try:
@@ -126,12 +126,12 @@ def cleanup_fraken_output_log(logfile: OutputFile) -> None:
         logger.warning("Could not find fraken-x outputfile.")
         return
 
-    if not extracted_dicts:
-        return
-
-    with open(OutputFile.path, "w") as f:
-        for entry in extracted_dicts:
-            f.write(json.dumps(entry) + "\n")
+    with open(logfile.path, "w") as f:
+        if not extracted_dicts:
+            f.write("")
+        else:
+            for entry in extracted_dicts:
+                f.write(json.dumps(entry) + "\n")
 
 
 def generate_report_from_matches(matches: list[YaraMatch]) -> Report:
