@@ -131,7 +131,7 @@ def cleanup_fraken_output_log(logfile: OutputFile) -> None:
             f.write("")
         else:
             for entry in extracted_dicts:
-                f.write(json.dumps(entry) + "\n")
+                f.write(f"{json.dumps(entry)}\n")
 
 
 def generate_report_from_matches(matches: list[YaraMatch]) -> Report:
