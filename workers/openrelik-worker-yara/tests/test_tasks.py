@@ -1,3 +1,4 @@
+import json
 import pytest
 import shutil
 from unittest.mock import MagicMock, patch
@@ -34,15 +35,12 @@ def test_cleanup_successful(mock_logfile):
     with open(mock_logfile.path, "r") as f:
         lines = f.readlines()
 
-    # Verify output line count
-    assert len(lines) == 2
-
     # Verify the first entry's content
     assert (
         "997fd3ad95aa1045b934b233c81285bf6b42b51a127d9f3a450c9955f453eefc" in lines[0]
     )
     # Verify it is no longer wrapped in a list (starts with { not [)
-    assert lines[0].startswith("{")
+    assert lines[0].startswith("[{")
 
 
 def test_cleanup_file_not_found(mock_logger):
@@ -79,4 +77,22 @@ def test_cleanup_no_valid_data(tmp_path):
 
     cleanup_fraken_output_log(logfile)
 
-    assert empty_file.read_text() == ""
+    assert empty_file.read_text() == "[]"
+
+
+def test_final_output_is_valid_json_array(mock_logfile):
+    """
+    Verifies the output is a single valid JSON array that can be
+    loaded entirely using json.load().
+    """
+    cleanup_fraken_output_log(mock_logfile)
+
+    with open(mock_logfile.path, "r") as f:
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError as e:
+            pytest.fail(f"Failed to load output file as a single JSON object: {e}")
+
+    assert isinstance(data, list), "Output should be a JSON array (list)."
+    assert len(data) == 2, "Should contain exactly two extracted entries."
+    assert data[0]["ImagePath"].endswith("socat")
