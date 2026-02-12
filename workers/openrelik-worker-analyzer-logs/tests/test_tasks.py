@@ -15,11 +15,13 @@
 import base64
 import filecmp
 import json
+import os
 import time
 from threading import Thread
 from unittest.mock import patch
 
 from fakeredis import TcpFakeServer
+from freezegun import freeze_time
 
 from src.tasks import run_ssh_analyzer
 
@@ -67,7 +69,23 @@ server_thread.start()
 time.sleep(0.1)
 
 
+def setUpModule():
+    """Executed once before any tests in this module run."""
+    os.environ["TZ"] = "UTC"
+    if hasattr(time, "tzset"):
+        time.tzset()
+
+
+def tearDownModule():
+    """Optional: Restores the environment after all tests are finished."""
+    if "TZ" in os.environ:
+        del os.environ["TZ"]
+    if hasattr(time, "tzset"):
+        time.tzset()
+
+
 class TestTasks:
+    @freeze_time("2025-12-30 03:20:00")
     @patch("src.app.redis.Redis.from_url")
     def test_run_ssh_analyzer(self, mock_redisclient):
         """Test LinuxSSHAnalysis task run."""
@@ -77,6 +95,23 @@ class TestTasks:
             output_path="/tmp",
             workflow_id="deadbeef",
             task_config={},
+        )
+
+        output_dict = json.loads(base64.b64decode(output))
+        output_path = output_dict.get("output_files")[0].get("path")
+        assert filecmp.cmp(
+            output_path, "test_data/linux_ssh_analysis.md", shallow=False
+        )
+
+    @patch("src.app.redis.Redis.from_url")
+    def test_run_ssh_analyzer_with_log_year(self, mock_redisclient):
+        """Test LinuxSSHAnalysis task run."""
+
+        output = run_ssh_analyzer(
+            input_files=_INPUT_FILES,
+            output_path="/tmp",
+            workflow_id="deadbeef",
+            task_config={"log_year": "2025"},
         )
 
         output_dict = json.loads(base64.b64decode(output))
