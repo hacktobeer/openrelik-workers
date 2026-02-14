@@ -10,7 +10,11 @@ package-mode = false
 python = ">=3.11,<4.0"
 celery = {extras = ["redis"], version = "^5.4.0"}
 openrelik-worker-common = "^0.17.1"
-pytest = "^9.0.2"
+
+[tool.poetry.group.test.dependencies]
+pytest = "*"
+pytest-cov = "^5.0.0"
+pytest-mock = "^3.14.0"
 
 [build-system]
 requires = ["poetry-core"]

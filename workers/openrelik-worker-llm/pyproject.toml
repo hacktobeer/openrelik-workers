@@ -12,7 +12,11 @@ python = "^3.12"
 celery = { extras = ["redis"], version = "^5.3.6" }
 openrelik-worker-common = "^0.10.0"
 openrelik-ai-common = "~0.5.0"
-pytest = "^9.0.2"
+
+[tool.poetry.group.test.dependencies]
+pytest = "*"
+pytest-cov = "^5.0.0"
+pytest-mock = "^3.14.0"
 
 [build-system]
 requires = ["poetry-core"]
