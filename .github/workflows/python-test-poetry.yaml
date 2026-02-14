@@ -54,7 +54,6 @@ jobs:
     - name: Install Poetry and dependencies
       # We run this in the subfolder so it finds the correct pyproject.toml
       run: |
-        sudo apt install -y libsnappy-dev
         pip install poetry
         poetry install --with test --no-root
 
