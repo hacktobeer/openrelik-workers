@@ -8,12 +8,9 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 # Install uv and any other dependency that your worker needs.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    libimage-exiftool-perl \
     software-properties-common \
     && rm -rf /var/lib/apt/lists/*
-
-# Install exiftool
-RUN apt-get update && apt-get install -y libimage-exiftool-perl && \
-    rm -rf /var/lib/apt/lists/*
 
 # Configure debugging
 ARG OPENRELIK_PYDEBUG
