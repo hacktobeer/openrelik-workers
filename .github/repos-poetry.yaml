@@ -1,3 +1,2 @@
-workers/openrelik-worker-llm: 'workers/openrelik-worker-llm/**'
 workers/openrelik-worker-photorec: 'workers/openrelik-worker-photorec/**'
 workers/openrelik-worker-timesketch: 'workers/openrelik-worker-timesketch/**'
