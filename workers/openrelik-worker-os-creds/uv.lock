@@ -883,6 +883,7 @@ test = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
+    { name = "setuptools" },
 ]
 
 [package.metadata]
@@ -899,6 +900,7 @@ test = [
     { name = "pytest" },
     { name = "pytest-cov", specifier = ">=5.0.0,<6" },
     { name = "pytest-mock", specifier = ">=3.14.0,<4" },
+    { name = "setuptools", specifier = ">=80.10.2" },
 ]
 
 [[package]]
