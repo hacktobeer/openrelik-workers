@@ -58,6 +58,8 @@ _INPUT_FILES_WITHOUT_SSH_EVENTS = [
 ]
 
 
+server = None
+
 # Start fake redis server for tests
 server_address = ("127.0.0.1", 6379)
 try:
@@ -70,6 +72,14 @@ try:
 except OSError:
     # Port already in use, probably by a running redis-server or another test runner.
     pass
+
+
+def tearDownModule():
+    """Executed once after all tests in this module run."""
+    global server
+    if server:
+        server.shutdown()
+        server.server_close()
 
 
 class TestTasks:
