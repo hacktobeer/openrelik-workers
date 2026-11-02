@@ -1,0 +1,31 @@
+[project]
+name = "openrelik-worker-persistence"
+version = "0.1.0"
+description = "Forensic hunting of system persistence mechanisms on disk images and extracted artifacts"
+authors = [{ name = "OpenRelik Authors" }]
+requires-python = ">=3.11,<4"
+readme = "README.md"
+license = "Apache 2.0"
+dependencies = [
+    "celery[redis]>=5.4.0,<6",
+    "openrelik-worker-common>=0.17.1",
+    "openrelik-common>=0.7.7",
+]
+
+[dependency-groups]
+test = [
+    "pytest",
+    "pytest-cov>=5.0.0,<6",
+    "ruff",
+]
+
+[tool.uv]
+package = false
+default-groups = ["test"]
+
+[tool.ruff]
+extend-exclude = ["designdoc"]
+
+[build-system]
+requires = ["uv_build>=0.9.0,<0.10.0"]
+build-backend = "uv_build"

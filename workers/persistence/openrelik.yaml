@@ -1,0 +1,6 @@
+# Showcase this worker on https://openrelik.org/marketplace
+publish: true
+
+# Worker Metadata. This section is required.
+display_name: Persistence Analyzer
+description: Hunt and analyze system persistence artifacts on disk images and extracted files.
