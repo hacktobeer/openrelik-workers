@@ -67,6 +67,7 @@ def test_score_finding_001_exact_schema():
     ],
 )
 def test_critical_flags_promotion(flag):
+    """Test findings with critical flags are promoted to RiskLevel.CRITICAL."""
     finding = Finding(
         path="/etc/security/pam_config",
         details={"flags": [flag]},
@@ -75,6 +76,7 @@ def test_critical_flags_promotion(flag):
 
 
 def test_critical_system_service_temp_execution():
+    """Test system services or cron jobs executing from temporary paths are CRITICAL."""
     finding = Finding(
         category="systemd_service",
         path="/etc/systemd/system/miner.service",
@@ -105,6 +107,7 @@ def test_critical_system_service_temp_execution():
     ],
 )
 def test_high_flags_promotion(flag):
+    """Test findings with high-risk flags are evaluated as RiskLevel.HIGH."""
     finding = Finding(
         path="/home/user/.bashrc",
         details={"flags": [flag]},
@@ -124,6 +127,7 @@ def test_high_flags_promotion(flag):
     ],
 )
 def test_medium_flags_promotion(flag):
+    """Test findings with medium-risk flags are evaluated as RiskLevel.MEDIUM."""
     finding = Finding(
         path="/home/user/.config/autostart/app.desktop",
         details={"flags": [flag]},
@@ -132,6 +136,7 @@ def test_medium_flags_promotion(flag):
 
 
 def test_info_flags():
+    """Test findings with info-level or empty flags are evaluated as RiskLevel.INFO."""
     finding = Finding(
         path="/home/user/.ssh/authorized_keys",
         details={"flags": ["SSH_AUTHORIZED_KEY_PRESENT"]},
@@ -143,6 +148,7 @@ def test_info_flags():
 
 
 def test_deduplication():
+    """Test duplicate findings with matching key are deduplicated."""
     f1 = Finding(
         path="/etc/systemd/system/service1.service",
         category="systemd_service",
@@ -168,6 +174,7 @@ def test_deduplication():
 
 
 def test_sorting_order_and_id_assignment():
+    """Test findings sorting order (severity then path) and sequential ID assignment."""
     f_info = Finding(
         path="/home/user/.ssh/authorized_keys",
         details={"flags": ["SSH_AUTHORIZED_KEY_PRESENT"]},
@@ -217,6 +224,7 @@ def test_sorting_order_and_id_assignment():
 
 
 def test_scoring_engine_class_methods():
+    """Test ScoringEngine class methods evaluate and get_summary."""
     findings = [
         Finding(
             category="cross_boundary_systemd",

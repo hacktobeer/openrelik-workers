@@ -37,6 +37,7 @@ SAMPLE_ED25519_KEY = "AAAAC3NzaC1lZDI1NTE5AAAAIGd6c7u8e9f0a1b2c3d4e5f6g7h8i9j0k1
 
 
 def test_parse_options_list():
+    """Test parse_options_list parses key-value and flag options with quotes."""
     tokens = [
         'command="cat /tmp/msg, hello"',
         "no-pty",
@@ -53,6 +54,7 @@ def test_parse_options_list():
 
 
 def test_parse_authorized_keys_line_simple():
+    """Test parsing a simple authorized_keys entry with key type, blob, and comment."""
     raw = f"ssh-rsa {SAMPLE_RSA_KEY} user@example.com"
     parsed = parse_authorized_keys_line(raw)
     assert parsed is not None
@@ -63,6 +65,7 @@ def test_parse_authorized_keys_line_simple():
 
 
 def test_parse_authorized_keys_line_with_options():
+    """Test parsing an authorized_keys entry containing options preceding the key."""
     raw = f'command="/bin/ls -la",no-pty ssh-ed25519 {SAMPLE_ED25519_KEY} bot-key'
     parsed = parse_authorized_keys_line(raw)
     assert parsed is not None
@@ -73,6 +76,7 @@ def test_parse_authorized_keys_line_with_options():
 
 
 def test_parse_authorized_keys_line_invalid():
+    """Test parsing invalid, empty, or commented authorized_keys lines returns None."""
     assert parse_authorized_keys_line("") is None
     assert parse_authorized_keys_line("# This is a comment") is None
     assert parse_authorized_keys_line("   \t  ") is None
@@ -80,6 +84,7 @@ def test_parse_authorized_keys_line_invalid():
 
 
 def test_parse_sshd_line():
+    """Test parse_sshd_line parses directives and handles comments and formatting."""
     assert parse_sshd_line("PermitRootLogin yes") == ("PermitRootLogin", "yes")
     assert parse_sshd_line("PermitRootLogin=yes") == ("PermitRootLogin", "yes")
     assert parse_sshd_line('PermitRootLogin "prohibit-password"') == (
@@ -95,6 +100,7 @@ def test_parse_sshd_line():
 
 
 def test_root_authorized_keys_finding():
+    """Test authorized_keys file under root generates medium risk finding."""
     with tempfile.TemporaryDirectory() as tmpdir:
         key_dir = os.path.join(tmpdir, "root", ".ssh")
         os.makedirs(key_dir, exist_ok=True)
@@ -121,6 +127,7 @@ def test_root_authorized_keys_finding():
 
 
 def test_user_authorized_keys_normal():
+    """Test standard user authorized_keys generates info level finding."""
     with tempfile.TemporaryDirectory() as tmpdir:
         key_dir = os.path.join(tmpdir, "home", "ubuntu", ".ssh")
         os.makedirs(key_dir, exist_ok=True)
@@ -141,6 +148,7 @@ def test_user_authorized_keys_normal():
 
 
 def test_forced_command_tmp_backdoor():
+    """Test forced command targeting temporary path flags as critical."""
     with tempfile.TemporaryDirectory() as tmpdir:
         key_dir = os.path.join(tmpdir, "home", "ubuntu", ".ssh")
         os.makedirs(key_dir, exist_ok=True)
@@ -163,6 +171,7 @@ def test_forced_command_tmp_backdoor():
 
 
 def test_forced_command_reverse_shell():
+    """Test forced command containing reverse shell flags as critical."""
     with tempfile.TemporaryDirectory() as tmpdir:
         key_dir = os.path.join(tmpdir, "home", "ubuntu", ".ssh")
         os.makedirs(key_dir, exist_ok=True)
@@ -183,6 +192,7 @@ def test_forced_command_reverse_shell():
 
 
 def test_forced_command_base64_payload():
+    """Test forced command with base64 payload decodes and flags as high risk."""
     with tempfile.TemporaryDirectory() as tmpdir:
         key_dir = os.path.join(tmpdir, "home", "ubuntu", ".ssh")
         os.makedirs(key_dir, exist_ok=True)
@@ -204,6 +214,7 @@ def test_forced_command_base64_payload():
 
 
 def test_forced_command_root_points_to_user_home():
+    """Test root authorized key forced command pointing to user home flags as critical."""
     with tempfile.TemporaryDirectory() as tmpdir:
         key_dir = os.path.join(tmpdir, "root", ".ssh")
         os.makedirs(key_dir, exist_ok=True)
@@ -225,6 +236,7 @@ def test_forced_command_root_points_to_user_home():
 
 
 def test_environment_injection():
+    """Test SSH key environment option injecting LD_PRELOAD flags as critical."""
     with tempfile.TemporaryDirectory() as tmpdir:
         key_dir = os.path.join(tmpdir, "home", "alice", ".ssh")
         os.makedirs(key_dir, exist_ok=True)
@@ -246,6 +258,7 @@ def test_environment_injection():
 
 
 def test_uncommon_comment_flag():
+    """Test uncommon or suspicious key comments flag as medium risk."""
     with tempfile.TemporaryDirectory() as tmpdir:
         key_dir = os.path.join(tmpdir, "home", "ubuntu", ".ssh")
         os.makedirs(key_dir, exist_ok=True)
@@ -263,6 +276,7 @@ def test_uncommon_comment_flag():
 
 
 def test_sshd_config_permit_root_login():
+    """Test PermitRootLogin enabled in sshd_config flags as medium risk."""
     with tempfile.TemporaryDirectory() as tmpdir:
         cfg_dir = os.path.join(tmpdir, "etc", "ssh")
         os.makedirs(cfg_dir, exist_ok=True)
@@ -290,6 +304,7 @@ def test_sshd_config_permit_root_login():
 
 
 def test_sshd_config_permit_empty_passwords():
+    """Test PermitEmptyPasswords in sshd_config flags as high risk."""
     with tempfile.TemporaryDirectory() as tmpdir:
         cfg_dir = os.path.join(tmpdir, "etc", "ssh")
         os.makedirs(cfg_dir, exist_ok=True)
@@ -308,6 +323,7 @@ def test_sshd_config_permit_empty_passwords():
 
 
 def test_sshd_config_authorized_keys_command_variations():
+    """Test AuthorizedKeysCommand pointing to temporary directory flags as critical."""
     with tempfile.TemporaryDirectory() as tmpdir:
         cfg_dir = os.path.join(tmpdir, "etc", "ssh")
         os.makedirs(cfg_dir, exist_ok=True)
@@ -327,6 +343,7 @@ def test_sshd_config_authorized_keys_command_variations():
 
 
 def test_sshd_config_authorized_keys_command_user_home():
+    """Test AuthorizedKeysCommand pointing to user home directory flags as critical."""
     with tempfile.TemporaryDirectory() as tmpdir:
         cfg_dir = os.path.join(tmpdir, "etc", "ssh")
         os.makedirs(cfg_dir, exist_ok=True)
@@ -344,6 +361,7 @@ def test_sshd_config_authorized_keys_command_user_home():
 
 
 def test_sshd_config_custom_authorized_keys_file_and_key_parsing():
+    """Test custom AuthorizedKeysFile directives and recursive parsing of keys."""
     with tempfile.TemporaryDirectory() as tmpdir:
         cfg_dir = os.path.join(tmpdir, "etc", "ssh")
         os.makedirs(cfg_dir, exist_ok=True)
@@ -379,6 +397,7 @@ def test_sshd_config_custom_authorized_keys_file_and_key_parsing():
 
 
 def test_sshd_config_custom_keys_in_tmp():
+    """Test custom AuthorizedKeysFile pointing to temporary directory flags as critical."""
     with tempfile.TemporaryDirectory() as tmpdir:
         cfg_dir = os.path.join(tmpdir, "etc", "ssh")
         os.makedirs(cfg_dir, exist_ok=True)
@@ -397,6 +416,7 @@ def test_sshd_config_custom_keys_in_tmp():
 
 
 def test_sshd_config_d_directory_scan():
+    """Test scanning sshd_config.d directory for configuration overrides."""
     with tempfile.TemporaryDirectory() as tmpdir:
         d_dir = os.path.join(tmpdir, "etc", "ssh", "sshd_config.d")
         os.makedirs(d_dir, exist_ok=True)

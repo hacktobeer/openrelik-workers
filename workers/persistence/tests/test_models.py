@@ -37,6 +37,7 @@ from src.utils.models import (
 
 
 def test_risk_level_values():
+    """Test RiskLevel enum string values."""
     assert RiskLevel.CRITICAL == "CRITICAL"
     assert RiskLevel.HIGH == "HIGH"
     assert RiskLevel.MEDIUM == "MEDIUM"
@@ -44,6 +45,7 @@ def test_risk_level_values():
 
 
 def test_finding_defaults_and_to_dict():
+    """Test Finding dataclass default values and conversion to dict."""
     finding = Finding()
     assert finding.id == ""
     assert finding.category == ""
@@ -60,6 +62,7 @@ def test_finding_defaults_and_to_dict():
 
 
 def test_finding_custom_values():
+    """Test Finding dataclass with custom fields and to_dict serialization."""
     finding = Finding(
         id="FINDING-001",
         category="cross_boundary_systemd",
@@ -82,6 +85,7 @@ def test_finding_custom_values():
 
 
 def test_report_meta():
+    """Test ReportMeta dataclass initialization and to_dict serialization."""
     meta = ReportMeta()
     assert meta.os == "linux"
     assert meta.hostname == "unknown"
@@ -101,6 +105,7 @@ def test_report_meta():
 
 
 def test_normalize_virtual_path():
+    """Test virtual path normalization across slashes and traversal segments."""
     assert normalize_virtual_path("") == "/"
     assert normalize_virtual_path("/") == "/"
     assert normalize_virtual_path("etc/cron.d/test") == "/etc/cron.d/test"
@@ -115,6 +120,7 @@ def test_normalize_virtual_path():
 
 
 def test_safe_resolve_path_success(tmp_path):
+    """Test safe_resolve_path successfully resolves valid paths within root."""
     root = str(tmp_path)
     resolved = safe_resolve_path(root, "/etc/shadow")
     expected = os.path.abspath(os.path.join(root, "etc", "shadow"))
@@ -122,6 +128,7 @@ def test_safe_resolve_path_success(tmp_path):
 
 
 def test_safe_resolve_path_traversal_detection(tmp_path):
+    """Test safe_resolve_path raises PathTraversalSecurityError on escaping paths."""
     root = str(tmp_path)
     with pytest.raises(PathTraversalSecurityError):
         safe_resolve_path(root, "../../etc/shadow")
@@ -131,6 +138,7 @@ def test_safe_resolve_path_traversal_detection(tmp_path):
 
 
 def test_safe_read_bytes_and_text(tmp_path):
+    """Test safe_read_bytes and safe_read_text behaviors and boundaries."""
     root = str(tmp_path)
     file_dir = tmp_path / "etc" / "systemd" / "system"
     file_dir.mkdir(parents=True)
@@ -160,6 +168,7 @@ def test_safe_read_bytes_and_text(tmp_path):
 
 
 def test_safe_resolve_symlink(tmp_path):
+    """Test safe_resolve_symlink handles relative, absolute, and malicious links."""
     root = str(tmp_path)
     etc_dir = tmp_path / "etc"
     etc_dir.mkdir(parents=True)
@@ -190,6 +199,7 @@ def test_safe_resolve_symlink(tmp_path):
 
 
 def test_analysis_target_with_root_path(tmp_path):
+    """Test AnalysisTarget operations when rooted at a local directory."""
     root = str(tmp_path)
     (tmp_path / "etc" / "cron.d").mkdir(parents=True)
     job_file = tmp_path / "etc" / "cron.d" / "backup"
@@ -210,6 +220,7 @@ def test_analysis_target_with_root_path(tmp_path):
 
 
 def test_analysis_target_with_virtual_paths():
+    """Test AnalysisTarget operations using explicit virtual path mappings."""
     with tempfile.NamedTemporaryFile("w+", delete=False) as f:
         f.write("[Service]\nExecStart=/tmp/evil\n")
         f.flush()
@@ -233,6 +244,7 @@ def test_analysis_target_with_virtual_paths():
 
 
 def test_analysis_context():
+    """Test AnalysisContext initialization with default and custom values."""
     ctx = AnalysisContext(target=None)
     assert ctx.os_name == "linux"
     assert ctx.hostname == "unknown"

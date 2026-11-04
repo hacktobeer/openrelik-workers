@@ -25,6 +25,7 @@ from src.utils.models import AnalysisTarget, RiskLevel
 
 
 def test_is_hidden_path():
+    """Test is_hidden_path detects hidden components across directories and files."""
     assert is_hidden_path("/dev/shm/.hidden.so") is True
     assert is_hidden_path("/.hidden/evil.so") is True
     assert is_hidden_path("/home/user/.local/share/evil.so") is True
@@ -34,6 +35,7 @@ def test_is_hidden_path():
 
 
 def test_is_untrusted_library_dir():
+    """Test is_untrusted_library_dir distinguishes standard from untrusted search directories."""
     # Standard paths should NOT be flagged
     assert is_untrusted_library_dir("/usr/local/lib") is False
     assert is_untrusted_library_dir("/usr/lib") is False
@@ -55,12 +57,14 @@ def test_is_untrusted_library_dir():
 
 
 def test_empty_target(tmp_path):
+    """Test empty target produces no ld.so.preload findings."""
     target = AnalysisTarget(root_path=str(tmp_path))
     findings = analyze_ld_preload(target)
     assert findings == []
 
 
 def test_ld_so_preload_empty_and_comments(tmp_path):
+    """Test comments and empty lines in ld.so.preload produce no findings."""
     etc = tmp_path / "etc"
     etc.mkdir(parents=True)
     preload = etc / "ld.so.preload"
@@ -72,6 +76,7 @@ def test_ld_so_preload_empty_and_comments(tmp_path):
 
 
 def test_ld_so_preload_standard_lib_evil(tmp_path):
+    """Test preloaded shared library in standard path flags as high risk."""
     etc = tmp_path / "etc"
     etc.mkdir(parents=True)
     preload = etc / "ld.so.preload"
@@ -95,6 +100,7 @@ def test_ld_so_preload_standard_lib_evil(tmp_path):
 
 
 def test_ld_so_preload_dev_shm_hidden(tmp_path):
+    """Test preloaded library located in /dev/shm hidden path flags as critical."""
     etc = tmp_path / "etc"
     etc.mkdir(parents=True)
     preload = etc / "ld.so.preload"
@@ -116,6 +122,7 @@ def test_ld_so_preload_dev_shm_hidden(tmp_path):
 
 
 def test_ld_so_preload_user_home(tmp_path):
+    """Test preloaded library located in user home directory flags as critical."""
     etc = tmp_path / "etc"
     etc.mkdir(parents=True)
     preload = etc / "ld.so.preload"
@@ -137,6 +144,7 @@ def test_ld_so_preload_user_home(tmp_path):
 
 
 def test_ld_so_preload_tmp_and_var_tmp(tmp_path):
+    """Test preloaded libraries located in /tmp and /var/tmp flag as critical."""
     etc = tmp_path / "etc"
     etc.mkdir(parents=True)
     preload = etc / "ld.so.preload"
@@ -154,6 +162,7 @@ def test_ld_so_preload_tmp_and_var_tmp(tmp_path):
 
 
 def test_ld_so_preload_multiple_entries_single_line_and_inline_comments(tmp_path):
+    """Test multiple preloaded libraries on single line with inline comments."""
     etc = tmp_path / "etc"
     etc.mkdir(parents=True)
     preload = etc / "ld.so.preload"
@@ -172,6 +181,7 @@ def test_ld_so_preload_multiple_entries_single_line_and_inline_comments(tmp_path
 
 
 def test_ld_so_conf_standard_vs_untrusted_paths(tmp_path):
+    """Test ld.so.conf.d files flag untrusted library directories and ignore standard paths."""
     etc = tmp_path / "etc"
     conf_d = etc / "ld.so.conf.d"
     conf_d.mkdir(parents=True)
@@ -217,6 +227,7 @@ def test_ld_so_conf_standard_vs_untrusted_paths(tmp_path):
 
 
 def test_ld_so_conf_with_include_directive(tmp_path):
+    """Test include directives in ld.so.conf recursively parse included conf files."""
     etc = tmp_path / "etc"
     conf_d = etc / "ld.so.conf.d"
     conf_d.mkdir(parents=True)
@@ -241,6 +252,7 @@ def test_ld_so_conf_with_include_directive(tmp_path):
 
 
 def test_analysis_target_virtual_paths_mode(tmp_path):
+    """Test ld.so.preload and conf parsing under virtual path mapping mode."""
     preload_file = tmp_path / "custom_preload"
     preload_file.write_text("/dev/shm/.hidden.so\n")
 
@@ -270,6 +282,7 @@ def test_analysis_target_virtual_paths_mode(tmp_path):
 
 
 def test_parser_class_interface(tmp_path):
+    """Test LinuxLdPreloadParser class parse method."""
     etc = tmp_path / "etc"
     etc.mkdir(parents=True)
     preload = etc / "ld.so.preload"

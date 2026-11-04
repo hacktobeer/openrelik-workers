@@ -278,3 +278,56 @@ def test_persistence_task_min_risk_level_filter(
     _, kwargs = mock_create_result.call_args
     # Filtered out because finding is not CRITICAL
     assert kwargs["meta"]["total_findings"] == 0
+
+
+@mock.patch("src.tasks.telemetry")
+@mock.patch("src.tasks.create_task_result")
+def test_persistence_task_include_raw_content_false(
+    mock_create_result, mock_telemetry, tmp_path
+):
+    """Test task execution with include_raw_content=False strips raw_content."""
+    mock_create_result.return_value = "raw_content_disabled"
+
+    cron_file = tmp_path / "crontab"
+    cron_file.write_text("* * * * * root /tmp/evil.sh\n")
+
+    output_dir = tmp_path / "output_raw"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    input_files = [
+        {
+            "path": str(cron_file),
+            "display_name": "crontab",
+            "original_path": "/etc/crontab",
+        }
+    ]
+
+    with mock.patch.object(tasks.command, "send_event"):
+        tasks.command.run(
+            pipe_result=None,
+            input_files=input_files,
+            output_path=str(output_dir),
+            workflow_id="wf-raw",
+            task_config={"include_raw_content": False},
+        )
+
+    mock_create_result.assert_called_once()
+    _, kwargs = mock_create_result.call_args
+    output_files = kwargs["output_files"]
+    report_json_path = output_files[0]["path"]
+    with open(report_json_path, "r", encoding="utf-8") as f:
+        report_data = json.load(f)
+
+    assert report_data["meta"]["total_findings"] >= 1
+    for finding in report_data["findings"]:
+        assert finding["raw_content"] is None
+
+    # Test string representation "false"
+    with mock.patch.object(tasks.command, "send_event"):
+        tasks.command.run(
+            pipe_result=None,
+            input_files=input_files,
+            output_path=str(output_dir),
+            workflow_id="wf-raw-str",
+            task_config={"include_raw_content": "false"},
+        )

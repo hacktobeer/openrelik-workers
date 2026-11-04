@@ -294,6 +294,7 @@ def test_infer_virtual_path_os_error_reading_file(monkeypatch, tmp_path):
     test_file.write_text("something")
 
     def mock_open(*args, **kwargs):
+        """Simulate an OSError when attempting to open a file."""
         raise OSError("Permission denied")
 
     monkeypatch.setattr("builtins.open", mock_open)

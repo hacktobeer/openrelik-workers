@@ -26,6 +26,7 @@ from src.utils.models import AnalysisTarget, Finding, RiskLevel
 
 
 def test_is_system_config_path():
+    """Test is_system_config_path identifies system vs user configuration paths."""
     assert is_system_config_path("/etc/systemd/system/nginx.service")
     assert is_system_config_path("/lib/systemd/system/app.service")
     assert is_system_config_path("/usr/lib/systemd/system/dbus.service")
@@ -40,6 +41,7 @@ def test_is_system_config_path():
 
 
 def test_extract_user_home_path():
+    """Test extracting user home paths and usernames from command text."""
     # Unquoted
     res = extract_user_home_path("/home/www-data/.local/bin/helper_daemon --background")
     assert res is not None
@@ -57,6 +59,7 @@ def test_extract_user_home_path():
 
 
 def test_extract_temp_path():
+    """Test extracting temporary directory paths from command text."""
     res = extract_temp_path("ExecStart=/tmp/.hidden/miner --daemon")
     assert res == "/tmp/.hidden/miner"
 
@@ -109,6 +112,7 @@ def test_enrich_systemd_cross_boundary_finding_001():
 
 
 def test_enrich_cron_cross_boundary():
+    """Test enriching cron jobs pointing to user home directories."""
     finding = Finding(
         category="cron_job",
         path="/etc/crontab",
@@ -136,6 +140,7 @@ def test_enrich_cron_cross_boundary():
 
 
 def test_enrich_init_cross_boundary():
+    """Test enriching init scripts pointing to user home directories."""
     finding = Finding(
         category="init_script",
         path="/etc/rc.local",
@@ -156,6 +161,7 @@ def test_enrich_init_cross_boundary():
 
 
 def test_standalone_cross_boundary_detection_systemd(tmp_path):
+    """Test detecting cross-boundary systemd units from target files."""
     service_file = tmp_path / "evil.service"
     service_file.write_text(
         "[Unit]\nDescription=Evil\n[Service]\nExecStart=/home/mallory/.config/backdoor --port 4444\n"
@@ -178,6 +184,7 @@ def test_standalone_cross_boundary_detection_systemd(tmp_path):
 
 
 def test_standalone_cross_boundary_detection_cron(tmp_path):
+    """Test detecting cross-boundary cron jobs from target files."""
     cron_file = tmp_path / "my_cron"
     cron_file.write_text("0 2 * * * root /home/charlie/sync.py\n")
 
@@ -194,6 +201,7 @@ def test_standalone_cross_boundary_detection_cron(tmp_path):
 
 
 def test_temp_path_cross_boundary_detection(tmp_path):
+    """Test detecting system services executing out of temporary directories."""
     service_file = tmp_path / "tmp_runner.service"
     service_file.write_text("[Service]\nExecStart=/tmp/.miner/xmrig -o pool\n")
 
@@ -213,6 +221,7 @@ def test_temp_path_cross_boundary_detection(tmp_path):
 
 
 def test_user_service_not_promoted():
+    """Test user-level systemd units are not promoted to cross-boundary CRITICAL."""
     finding = Finding(
         category="user_systemd_unit",
         path="/home/alice/.config/systemd/user/my_worker.service",
@@ -232,6 +241,7 @@ def test_user_service_not_promoted():
 
 
 def test_non_cross_boundary_findings_preserved():
+    """Test unrelated findings are preserved alongside cross-boundary enrichments."""
     f_cross = Finding(
         category="systemd_service",
         path="/etc/systemd/system/helper.service",
@@ -256,6 +266,7 @@ def test_non_cross_boundary_findings_preserved():
 
 
 def test_linux_cross_boundary_analyzer_class(tmp_path):
+    """Test LinuxCrossBoundaryAnalyzer class methods analyze and correlate."""
     service_file = tmp_path / "test.service"
     service_file.write_text("[Service]\nExecStart=/home/testuser/bin/service\n")
 

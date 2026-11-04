@@ -47,6 +47,12 @@ TASK_METADATA: dict[str, Any] = {
             ),
             "type": "text",
         },
+        {
+            "name": "include_raw_content",
+            "label": "Include Raw Content",
+            "description": "Include raw configuration text snippets in findings",
+            "type": "checkbox",
+        },
     ],
 }
 
@@ -87,11 +93,20 @@ def command(
         raise RuntimeError("No input files provided.")
 
     min_risk_level = task_config.get("min_risk_level") or None
+    include_raw_val = task_config.get("include_raw_content", True)
+    if isinstance(include_raw_val, str):
+        include_raw_content = include_raw_val.lower() not in ("false", "0", "no")
+    else:
+        include_raw_content = bool(include_raw_val)
 
     with resolve_targets(input_files) as targets:
         meta, findings = run_linux_persistence_analysis(
             targets, min_risk_level=min_risk_level
         )
+
+    if not include_raw_content:
+        for f in findings:
+            f.raw_content = None
 
     json_output = create_output_file(
         output_path,

